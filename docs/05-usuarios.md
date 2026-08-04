@@ -1,14 +1,13 @@
 # 1.5 — Gestión de Usuarios y Autenticación
 
-> **Proyecto — Agenda Inteligente WhatsApp CRM**
+> **Proyecto — Agenda Inteligente WhatsApp CRM (SaaS)**
 
-El sistema utiliza **Clerk** para la gestión de acceso, garantizando que los datos de los clientes estén completamente restringidos al dueño del negocio.
+El sistema utiliza **Clerk** para la gestión de acceso, garantizando el aislamiento absoluto de los datos mediante una estrategia Multi-Tenant.
 
 ---
 
-## Estrategia de Acceso
+## Estrategia de Acceso e Inquilinos (Tenants)
 
-1. **Plataforma Privada:** El registro libre (`Sign Up`) estará desactivado desde el panel de Clerk para evitar que personas externas creen cuentas.
-2. **Cuenta Única:** El acceso estará configurado exclusivamente para la casilla de correo o el número de teléfono del Administrador (Dueño).
-3. **Protección de Rutas:** El middleware de Next.js interceptará cualquier intento de acceso a `/dashboard` o a las rutas `/api/clientes/*` que no contenga un token de sesión válido de Clerk.
-4. **Excepción de Seguridad:** La única ruta pública y exenta de la validación de Clerk será el Webhook (`/api/webhook/whatsapp`), la cual validará su origen a través de un token estático proporcionado por Meta (WhatsApp API).
+1. **Autenticación B2B:** Los dueños de los negocios pueden crear sus cuentas en la plataforma (`Sign Up`). Al registrarse, el sistema genera automáticamente un nuevo registro en la tabla `Negocio` y vincula al nuevo `Usuario` con ese negocio.
+2. **Aislamiento de Datos:** El middleware de Next.js intercepta cualquier intento de acceso a rutas protegidas. Una vez dentro de un endpoint de la API, el backend captura el `clerkId` de la sesión actual, busca su `negocioId` en la base de datos, y utiliza ese ID como filtro obligatorio (`WHERE`) para cualquier lectura o escritura.
+3. **Excepción de Seguridad:** La única ruta pública es el Webhook (`/api/webhook/whatsapp`), la cual no valida usuarios de Clerk, sino que valida su origen a través del token estático de configuración (Meta API).

@@ -11,23 +11,43 @@ datasource db {
   provider = "postgresql"
 }
 
+model Negocio {
+  id              String    @id @default(uuid())
+  nombre          String
+  telefonoOficial String    @unique //El número de WhatsApp del local
+  creadoEn        DateTime  @default(now())
+  
+  usuarios        Usuario[]
+  clientes        Cliente[]
+  turnos          Turno[]
+}
+
+model Usuario {
+  id        String   @id @default(uuid())
+  clerkId   String   @unique //El ID que nos devuelve Clerk al iniciar sesión
+  nombre    String
+  email     String   @unique
+  negocioId String
+  negocio   Negocio  @relation(fields: [negocioId], references: [id])
+}
+
 model Cliente {
   id        String   @id @default(uuid())
-  nombre    String
-  telefono  String   @unique
-  direccion String?
-  turnos    Turno[]  // Relación 1 a N: Un cliente puede tener muchos turnos
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  telefono  String
+  nombre    String?
+  negocioId String
+  negocio   Negocio  @relation(fields: [negocioId], references: [id])
+  turnos    Turno[]
+
+  @@unique([telefono, negocioId]) //Un mismo cliente (teléfono) puede ir a distintos negocios
 }
 
 model Turno {
-  id         String    @id @default(uuid())
-  clienteId  String
-  cliente    Cliente   @relation(fields: [clienteId], references: [id], onDelete: Cascade)
-  motivo     String?   @db.Text
-  estado     String    @default("PENDIENTE") // PENDIENTE, AGENDADO, COMPLETADO, CANCELADO
-  fechaTurno DateTime?
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  id          String   @id @default(uuid())
+  fechaHora   DateTime
+  estado      String   @default("PENDIENTE") //PENDIENTE, CONFIRMADO, CANCELADO
+  clienteId   String
+  cliente     Cliente  @relation(fields: [clienteId], references: [id])
+  negocioId   String
+  negocio     Negocio  @relation(fields: [negocioId], references: [id])
 }

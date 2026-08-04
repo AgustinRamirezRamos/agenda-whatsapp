@@ -1,6 +1,6 @@
 # 1.3 — Diseño de APIs Internas e Integraciones
 
-> **Proyecto — Agenda Inteligente WhatsApp CRM**
+> **Proyecto — Agenda Inteligente WhatsApp CRM (SaaS)**
 
 Documentación de los endpoints expuestos por el backend en Next.js. El sistema cuenta con integraciones externas (WhatsApp Cloud API) y rutas internas protegidas para el consumo del Frontend.
 
@@ -26,7 +26,7 @@ Se debe devolver exactamente el valor recibido en `hub.challenge` en formato de 
 ### 2. POST /api/webhook/whatsapp
 
 **Quién llama**: WhatsApp Cloud API (Meta).
-**Propósito**: Recibir en tiempo real cada mensaje que un cliente envía al número de WhatsApp Business del Administrador. Este endpoint procesa el texto con la IA (Gemini) y lo guarda en la base de datos.
+**Propósito**: Recibir en tiempo real cada mensaje. Procesa el texto con Gemini, identifica a qué negocio va dirigido usando el número de destino y guarda el turno en la base de datos asociado a ese local.
 
 **Request (JSON Body - Payload estándar de Meta)**:
 {
@@ -36,9 +36,12 @@ Se debe devolver exactamente el valor recibido en `hub.challenge` en formato de 
       "changes": [
         {
           "value": {
+            "metadata": {
+              "display_phone_number": "54922222222" // <- IDENTIFICADOR DEL NEGOCIO
+            },
             "messages": [
               {
-                "from": "549112345678",
+                "from": "549112345678", // <- CELULAR DEL CLIENTE
                 "text": {
                   "body": "Soy Carlos, vivo en San Martin 123, necesito arreglar la persiana"
                 }
@@ -61,12 +64,12 @@ Se debe devolver exactamente el valor recibido en `hub.challenge` en formato de 
 
 ## Rutas Internas (Frontend <-> Backend)
 
-*Nota: Todas estas rutas requieren una sesión activa validada por el middleware de Clerk.*
+*Nota de Seguridad: Todas estas rutas requieren una sesión activa validada por el middleware de Clerk. El backend SIEMPRE debe extraer el `clerkId` del token de sesión para buscar el `negocioId` correspondiente y filtrar las consultas a la base de datos (Ej: `where: { negocioId: usuario.negocioId }`). Por definición de alcance, estas rutas no interactúan con ninguna pasarela de pago externa.*
 
 ### 3. GET /api/clientes/pendientes
 
 **Quién llama**: Frontend (Panel "Inbox" del Administrador).
-**Propósito**: Obtener el listado de clientes nuevos que la IA procesó pero que aún no tienen una fecha asignada en el calendario.
+**Propósito**: Obtener el listado de clientes nuevos del negocio actual que la IA procesó pero que aún no tienen una fecha asignada en el calendario.
 
 **Request**: Ninguno.
 
@@ -89,7 +92,7 @@ Se debe devolver exactamente el valor recibido en `hub.challenge` en formato de 
 ### 4. GET /api/clientes/agendados
 
 **Quién llama**: Frontend (Vista del Calendario).
-**Propósito**: Obtener los clientes que ya tienen una fecha asignada para pintarlos en los días correspondientes.
+**Propósito**: Obtener los clientes del negocio actual que ya tienen una fecha asignada para pintarlos en los días correspondientes.
 
 **Request**: 
 (Opcional) Query params para filtrar por mes/semana: `?start_date=2026-07-01&end_date=2026-07-31`
@@ -113,7 +116,7 @@ Se debe devolver exactamente el valor recibido en `hub.challenge` en formato de 
 ### 5. PATCH /api/clientes/{id_cliente}/agendar
 
 **Quién llama**: Frontend (Acción Drag & Drop en el calendario).
-**Propósito**: Actualizar la fecha del turno cuando el Administrador arrastra la tarjeta de un cliente hacia un día específico.
+**Propósito**: Actualizar la fecha del turno cuando el Administrador arrastra la tarjeta de un cliente hacia un día específico (validando que el cliente pertenezca al negocio del usuario logueado).
 
 **Request**:
 {
