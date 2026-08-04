@@ -46,6 +46,7 @@ model Turno {
   id          String   @id @default(uuid())
   fechaHora   DateTime
   estado      String   @default("PENDIENTE") //PENDIENTE, CONFIRMADO, CANCELADO
+  motivo      String
   clienteId   String
   cliente     Cliente  @relation(fields: [clienteId], references: [id])
   negocioId   String
