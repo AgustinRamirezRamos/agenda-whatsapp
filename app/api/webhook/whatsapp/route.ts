@@ -1,6 +1,6 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-// Asegurate de que la ruta de importación de Prisma coincida con tu proyecto
 import prisma from "@/lib/prisma"; 
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -22,9 +22,8 @@ export async function GET(request: Request) {
   return NextResponse.json({ error: "Token inválido" }, { status: 403 });
 }
 
-console.log("ESTADO DE DB URL:", process.env.DATABASE_URL ? "CARGADA CORRECTAMENTE" : "COMPLETAMENTE VACÍA");
-
 export async function POST(request: Request) {
+  console.log("=== PING REAL DESDE META ===");
   try {
     const body = await request.json();
 
@@ -53,7 +52,7 @@ export async function POST(request: Request) {
 
         //Procesar el texto con Gemini 2.0 Flash
         const model = genAI.getGenerativeModel({ 
-          model: "gemini-2.0-flash",
+          model: "gemini-2.5-flash",
           systemInstruction: "Sos un asistente de extracción de datos para turnos. Analizá el mensaje del cliente y devolvé ÚNICAMENTE un objeto JSON válido con las claves: 'nombre', 'direccion' (si no hay, null) y 'motivo'. No incluyas markdown ni texto extra."
         });
 
