@@ -34,14 +34,14 @@ export async function POST(request: Request) {
       const value = changes?.value;
       const message = value?.messages?.[0];
       
-      // 1. Extraer el número del negocio (destinatario)
+      //Extraer el número del negocio (destinatario)
       const numeroNegocio = value?.metadata?.display_phone_number;
 
       if (message && message.type === "text" && numeroNegocio) {
         const numeroCliente = message.from;
         const textoMensaje = message.text.body;
 
-        // 2. Buscar el negocio en la base de datos
+        //Buscar el negocio en la base de datos
         const negocio = await prisma.negocio.findUnique({
           where: { telefonoOficial: numeroNegocio }
         });
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
           return NextResponse.json({ status: "success" }, { status: 200 });
         }
 
-        // 3. Procesar el texto con Gemini 2.0 Flash
+        //Procesar el texto con Gemini 2.0 Flash
         const model = genAI.getGenerativeModel({ 
           model: "gemini-2.0-flash",
           systemInstruction: "Sos un asistente de extracción de datos para turnos. Analizá el mensaje del cliente y devolvé ÚNICAMENTE un objeto JSON válido con las claves: 'nombre', 'direccion' (si no hay, null) y 'motivo'. No incluyas markdown ni texto extra."
@@ -60,11 +60,11 @@ export async function POST(request: Request) {
         const result = await model.generateContent(textoMensaje);
         const responseText = result.response.text();
         
-        // Limpiar posible formato markdown (```json ... ```)
+        //Limpiar posible formato markdown (```json ... ```)
         const jsonLimpiado = responseText.replace(/```json|```/g, '').trim();
         const datosExtraidos = JSON.parse(jsonLimpiado);
 
-        // 4. Lógica de Base de Datos
+        //Lógica de Base de Datos
         let cliente = await prisma.cliente.findUnique({
           where: {
             telefono_negocioId: {
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         });
 
         if (!cliente) {
-          // A. Cliente Nuevo
+          //Cliente Nuevo
           cliente = await prisma.cliente.create({
             data: {
               telefono: numeroCliente,
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
             }
           });
         } else {
-          // B. Cliente Existente
+          //Cliente Existente
           const turnoActivo = await prisma.turno.findFirst({
             where: {
               clienteId: cliente.id,
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
           });
 
           if (turnoActivo) {
-            // B1. Tiene un turno activo: actualizamos el motivo
+            //Tiene un turno activo: actualizamos el motivo
             await prisma.turno.update({
               where: { id: turnoActivo.id },
               data: {
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
               }
             });
           } else {
-            // B2. Turnos anteriores finalizados: creamos uno nuevo
+            //Turnos anteriores finalizados: creamos uno nuevo
             await prisma.turno.create({
               data: {
                 clienteId: cliente.id,
