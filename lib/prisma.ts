@@ -1,17 +1,12 @@
 import { PrismaClient } from '@prisma/client';
-import { Pool, neonConfig } from '@neondatabase/serverless';
-import { PrismaNeon } from '@prisma/adapter-neon';
-import ws from 'ws';
-
-// Necesario para que Neon funcione correctamente en entornos Node.js / Vercel
-neonConfig.webSocketConstructor = ws;
+import { neon } from '@neondatabase/serverless';
+import { PrismaNeonHttp } from '@prisma/adapter-neon';
 
 const prismaClientSingleton = () => {
-  // Leemos la URL de la base de datos de forma segura
-  const connectionString = "postgresql://neondb_owner:npg_hIYZme6Wi9yc@ep-damp-river-aco2x2b9-pooler.sa-east-1.aws.neon.tech/neondb";
+  const connectionString = process.env.DATABASE_URL || '';
   
-  const pool = new Pool({ connectionString });
-  const adapter = new PrismaNeon(pool as any);
+  const sql = neon(connectionString);
+  const adapter = new PrismaNeonHttp(sql as any, {});
   
   return new PrismaClient({ adapter });
 };
