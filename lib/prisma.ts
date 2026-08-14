@@ -8,7 +8,7 @@ neonConfig.webSocketConstructor = ws;
 
 const prismaClientSingleton = () => {
   // Leemos la URL de la base de datos de forma segura
-  const connectionString = process.env.DATABASE_URL || '';
+  const connectionString = "postgresql://neondb_owner:npg_hIYZme6Wi9yc@ep-damp-river-aco2x2b9-pooler.sa-east-1.aws.neon.tech/neondb";
   
   const pool = new Pool({ connectionString });
   const adapter = new PrismaNeon(pool as any);
