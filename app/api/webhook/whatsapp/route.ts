@@ -50,9 +50,9 @@ export async function POST(request: Request) {
           return NextResponse.json({ status: "success" }, { status: 200 });
         }
 
-        //Procesar el texto con Gemini 2.0 Flash
+        //Procesar el texto con Gemini 2.5 Flash
         const model = genAI.getGenerativeModel({ 
-          model: "gemini-2.5-flash",
+          model: "gemini-2.5-flash-001",
           systemInstruction: "Sos un asistente de extracción de datos para turnos. Analizá el mensaje del cliente y devolvé ÚNICAMENTE un objeto JSON válido con las claves: 'nombre', 'direccion' (si no hay, null) y 'motivo'. No incluyas markdown ni texto extra."
         });
 
