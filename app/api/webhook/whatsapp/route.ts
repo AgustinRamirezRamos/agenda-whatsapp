@@ -22,6 +22,8 @@ export async function GET(request: Request) {
   return NextResponse.json({ error: "Token inválido" }, { status: 403 });
 }
 
+console.log("ESTADO DE DB URL:", process.env.DATABASE_URL ? "CARGADA CORRECTAMENTE" : "COMPLETAMENTE VACÍA");
+
 export async function POST(request: Request) {
   try {
     const body = await request.json();
