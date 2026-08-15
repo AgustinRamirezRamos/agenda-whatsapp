@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
         //Procesar el texto con Gemini 2.5 Flash
         const model = genAI.getGenerativeModel({ 
-          model: "gemini-2.5-flash-001",
+          model: "gemini-2.5-flash",
           systemInstruction: "Sos un asistente de extracción de datos para turnos. Analizá el mensaje del cliente y devolvé ÚNICAMENTE un objeto JSON válido con las claves: 'nombre', 'direccion' (si no hay, null) y 'motivo'. No incluyas markdown ni texto extra."
         });
 
